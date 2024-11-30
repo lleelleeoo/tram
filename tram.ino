@@ -13,9 +13,10 @@ enum Animations {
   RED_WHITE_WAVE,
   MOVE,
   LAVA,
+  OLD_METRO,
 };
 
-const Animations animation = LAVA;
+const Animations animation = OLD_METRO;
 
 void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, LED_AMOUNT); 
@@ -25,10 +26,14 @@ void setup() {
 
 void loop() {
   if (animation == RAINBOW) rainbowAnimationStep();
-  if (animation == WAVE) wave();
-  if (animation == RED_WHITE_WAVE) redWhiteWave();
-  if (animation == MOVE) move();
-  if (animation == LAVA) lava();
+  if (animation == WAVE) waveAnimationStep();
+  if (animation == RED_WHITE_WAVE) redWhiteWaveAnimationStep();
+  if (animation == MOVE) moveAnimationStep();
+  if (animation == LAVA) lavaAnimationStep();
+  if (animation == OLD_METRO) oldMetroAnimationStep();
+
+  // handle20MinPomodoro();
+  // handle40MinPomodoro();
 
   FastLED.show();
 }
@@ -51,7 +56,7 @@ void rainbowAnimationStep() {
   animation += 0.02;
 }
 
-void wave() {
+void waveAnimationStep() {
   const unsigned short int hue = 20;
   const unsigned short int sat = 200;
 
@@ -75,7 +80,7 @@ void wave() {
   fadeAnimation += 0.04;
 }
 
-void redWhiteWave() {
+void redWhiteWaveAnimationStep() {
   static float animation = 0;
   for(int i=0; i<LED_AMOUNT; ++i){
     
@@ -90,7 +95,7 @@ void redWhiteWave() {
   animation += 0.02;
 }
 
-void move() {
+void moveAnimationStep() {
   static float move = 0;
   static float freq = 0;
 
@@ -110,20 +115,54 @@ void move() {
 }
 
 
-void lava() {
-  static float x = 0;
+void lavaAnimationStep() {
+  const static unsigned short int shift = 130;
+  const static uint8_t scale = 30; // Scale of the perlin noise
+
   static float y = 0;
-  static float z = 0;
-  const static unsigned short int shift = 150;
-  uint8_t scale = 30; // Scale of the perlin noise
 
   for (int i = 0; i < LED_AMOUNT; ++i) {
-    uint8_t hue = inoise8(x + i * scale, y, z); // Generate perlin noise for hue
-    leds[i] = CHSV((hue+shift)%255, 255, 255);
+    uint8_t hue = (shift + inoise8(i * scale, y))%255;
+    leds[i] = CHSV(hue, 255, 255);
   }
   
   // Move through the noise space over time
-  x += 0.4;
   y += 0.4;
-  z += 0.4;
+}
+
+void oldMetroAnimationStep() {
+  const static unsigned short int shift = 130;
+  const static uint8_t scale = 30; // Scale of the perlin noise
+  const static unsigned short int hue = 15;
+
+  static float y = 0;
+
+  for (int i = 0; i < LED_AMOUNT; ++i) {
+    uint8_t bright = shift + inoise8(i * scale, y);
+
+    leds[i] = CHSV(hue, 255, bright);
+  }
+  
+  // Move through the noise space over time
+  y += 0.04;
+}
+
+void handle20MinPomodoro() {
+  const unsigned short int current = 30;
+  const unsigned short int ledAmount = 10;
+  const unsigned short int diff = 255 / ledAmount;
+
+  for (int i = current; i>=0; i--) {
+    leds[i] = CHSV(HUE_GREEN, 255, 255);
+  }
+}
+
+void handle40MinPomodoro() {
+  const unsigned short int current = 15;
+  const unsigned short int ledAmount = 10;
+  const unsigned short int diff = 255 / ledAmount;
+
+  for (int i = current; i>=0; i--) {
+    leds[i] = CHSV(HUE_ORANGE, 255, 255);
+  }
 }
