@@ -2,7 +2,7 @@
 
 #define LED_AMOUNT 48
 #define DATA_PIN 6
-#define GLOBAL_BRIGHTNESS 30
+#define GLOBAL_BRIGHTNESS 60
 
 CRGB leds[LED_AMOUNT];
 
@@ -16,10 +16,10 @@ enum Animations {
   OLD_METRO,
 };
 
-const Animations animation = OLD_METRO;
+const Animations animation = LAVA;
 
 void setup() {
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, LED_AMOUNT); 
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, LED_AMOUNT);
   FastLED.setBrightness(GLOBAL_BRIGHTNESS);
   Serial.begin(115200);
 }
@@ -68,7 +68,7 @@ void waveAnimationStep() {
   FastLED.setBrightness(fadeEffect * GLOBAL_BRIGHTNESS);
 
   for(int i=0; i<LED_AMOUNT; ++i){
-    
+
     float brightness = sin(animation + i * 0.3);
     brightness = (brightness + 1) / 2;
     brightness *= 255;
@@ -83,7 +83,7 @@ void waveAnimationStep() {
 void redWhiteWaveAnimationStep() {
   static float animation = 0;
   for(int i=0; i<LED_AMOUNT; ++i){
-    
+
     float saturation = sin(animation + i * 0.04);
     saturation = (saturation + 1) / 2;
     saturation *= 255;
@@ -114,20 +114,22 @@ void moveAnimationStep() {
   move += 0.1;
 }
 
-
 void lavaAnimationStep() {
   const static unsigned short int shift = 130;
   const static uint8_t scale = 30; // Scale of the perlin noise
-
+  const float step = 0.4;
   static float y = 0;
+  static boolean isForward = true;
 
   for (int i = 0; i < LED_AMOUNT; ++i) {
     uint8_t hue = (shift + inoise8(i * scale, y))%255;
     leds[i] = CHSV(hue, 255, 255);
   }
-  
+
   // Move through the noise space over time
-  y += 0.4;
+  if (y < 0) isForward = true;
+  if (y > 3E+6) isForward = false;
+  y += isForward ? step : -step;
 }
 
 void oldMetroAnimationStep() {
@@ -142,7 +144,7 @@ void oldMetroAnimationStep() {
 
     leds[i] = CHSV(hue, 255, bright);
   }
-  
+
   // Move through the noise space over time
   y += 0.04;
 }
